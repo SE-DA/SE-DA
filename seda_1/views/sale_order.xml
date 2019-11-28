@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+        <record id="view_so_dvlr_form" model="ir.ui.view">
+            <field name="name">stock_so_dvlr_form</field>
+            <field name="model">sale.order</field>
+            <field name="inherit_id" ref="sale_crm.sale_view_inherit123"/>
+            <field name="priority">1666</field>
+            <field name="arch" type="xml">
+                <xpath expr="//field[@name='partner_id']" position="after">
+                    <field name="opportunity_id" string="Komisja" readonly="1"/>
+                </xpath>
+
+            </field>
+        </record>
+
+
+        <record id="view_m_so_dvlr_form" model="ir.ui.view">
+            <field name="name">so_dvlr_form</field>
+            <field name="model">sale.order</field>
+            <field name="inherit_id" ref="sale.view_order_form"/>
+            <field name="priority">1667</field>
+            <field name="arch" type="xml">
+                <xpath expr="//notebook/page[@name='order_lines']/field[@name='order_line']/tree/field[@name='name']" position="after">
+                    <field name="order_id" invisible="1"/>
+                    <field name="bom_id" string="BOM" context="{'default_product_tmpl_id': product_id,}" domain="[('product_tmpl_id','=',product_id)]"/>
+                </xpath>
+
+            </field>
+        </record>
+
+
+        <!--<record id="view_bom_dvlr_form" model="ir.ui.view">-->
+            <!--<field name="name">bom_dvlr_form</field>-->
+            <!--<field name="model">mrp.bom</field>-->
+            <!--<field name="inherit_id" ref="mrp.mrp_bom_form_view"/>-->
+            <!--<field name="arch" type="xml">-->
+                <!--<xpath expr="//field[@name='type']" position="after">-->
+                    <!--<field name="lead_id" domain="[('partner_id', '=',owner_id )]" options="{'no_create': True,}"/>-->
+                    <!--<field name="owner_id" readonly="1"/>-->
+                <!--</xpath>-->
+
+            <!--</field>-->
+        <!--</record>-->
+
+
+</odoo>

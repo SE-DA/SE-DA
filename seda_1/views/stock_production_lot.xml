@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+        <record id="stock_production_lot_dvlr" model="ir.ui.view">
+        <field name="name">stock.production.lot.dvlr</field>
+        <field name="model">stock.production.lot</field>
+        <field name="inherit_id" ref="stock.view_production_lot_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//group[@name='main_group']/group/field[@name='ref']" position="after">
+                <field name="lead_id" domain="[('partner_id', '=',owner_id )]" options="{'no_create': True,}"/>
+                <field name="owner_id" readonly="0"/>
+            </xpath>
+        </field>
+    </record>
+
+
+    <record id="stock_production_lot_tree_dvlr" model="ir.ui.view">
+        <field name="name">stock.production.lot.tree.dvlr</field>
+        <field name="model">stock.production.lot</field>
+        <field name="inherit_id" ref="stock.view_production_lot_tree"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='product_id']" position="after">
+                <field name="lead_id" readonly="1"/>
+                <field name="owner_id" readonly="1"/>
+            </xpath>
+        </field>
+    </record>
+
+
+
+    <record id="view_mrp_product_produce_wizard_dvlr" model="ir.ui.view">
+        <field name="name">MRP Product Produce DVLR</field>
+        <field name="model">mrp.product.produce</field>
+        <field name="inherit_id" ref="mrp.view_mrp_product_produce_wizard"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='lot_id']" position="before">
+                <field name="lead_id" readonly="1" attrs="{'invisible': [('product_tracking', '!=', 'lot')]}"/>
+                <field name="owner_id" readonly="1" attrs="{'invisible': [('product_tracking', '!=', 'lot')]}"/>
+            </xpath>
+            <xpath expr="//field[@name='lot_id']" position="attributes">
+             <attribute name="context">{'default_product_id': product_id, 'default_lead_id':lead_id,'default_owner_id':owner_id}</attribute>
+            </xpath>
+        </field>
+    </record>
+
+</odoo>

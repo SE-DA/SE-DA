@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+        <record id="view_picking_dvlr_form" model="ir.ui.view">
+            <field name="name">delivery.stock.picking_dvlr.form</field>
+            <field name="model">stock.picking</field>
+            <field name="inherit_id" ref="stock.view_picking_form"/>
+            <field name="arch" type="xml">
+
+                <xpath expr="//field[@name='owner_id']" position="before">
+                    <field name="so_id" invisible="1"/>
+                    <field name="owner_v" invisible="1"/>
+                    <field name="lead_v" invisible="1" />
+                    <field name="owner_w" invisible="1"/>
+                    <field name="lead_w" invisible="1" />
+                </xpath>
+
+                <xpath expr="//button[@name='action_assign_owner']" position="attributes">
+                    <attribute name="attrs">{'invisible': ['|','|',('move_line_exist', '=', False),('state', 'not in', ('draft','assigned','confirmed')),('owner_w', '=', False)]}</attribute>
+                </xpath>
+
+                <xpath expr="//field[@name='owner_id']" position="attributes">
+                    <attribute name="string">Właściciel</attribute>
+                    <attribute name="attrs">{"invisible": [('owner_v', "=", False)], "readonly": [('owner_w', "=", False)] }</attribute>
+                </xpath>
+
+                <xpath expr="//field[@name='partner_id']" position="attributes">
+                    <attribute name="string">Dostawca</attribute>
+                </xpath>
+
+                <xpath expr="//field[@name='owner_id']" position="after">
+                    <field name="lead_id" attrs="{'invisible': [('lead_v', '=', False)], 'readonly': [('lead_w', '=', False)] }" domain="[('partner_id', '=',owner_id )]" options="{'no_create': True,}"/>
+                    <button name="action_assign_lead" string="Assign lead" type="object" attrs="{'invisible': ['|','|',('move_line_exist', '=', False),('state', 'not in', ('draft','assigned','confirmed')),('lead_w', '=', False)]}"
+                                    class="oe_link"/>
+                </xpath>
+            </field>
+        </record>
+
+        <record id="view_stock_move_line_dvlr_tree" model="ir.ui.view">
+            <field name="name">stock_move_line_dvlr_tree</field>
+            <field name="model">stock.move.line</field>
+            <field name="inherit_id" ref="stock.view_stock_move_line_operation_tree"/>
+            <field name="arch" type="xml">
+                <xpath expr="//field[@name='owner_id']" position="after">
+
+                    <field name="lead_v" invisible="1" />
+                    <field name="owner_v" invisible="1" />
+                    <field name="lead_w" invisible="1" />
+                    <field name="owner_w" invisible="1" />
+
+                    <field name="lead_id"  domain="[('partner_id', '=',owner_id )]" options="{'no_create': True,}" attrs="{'readonly': [('lead_w', '=', False)] }"/>
+
+                </xpath>
+
+                <xpath expr="//field[@name='owner_id']" position="attributes">
+                    <attribute name="attrs">{"readonly": [('owner_w', "=", False)] }</attribute>
+                </xpath>
+
+            </field>
+        </record>
+
+
+    <record id="view_stock_picking_type_dvlr_form" model="ir.ui.view">
+            <field name="name">stock_picking_type_dvlr_form</field>
+            <field name="model">stock.picking.type</field>
+            <field name="inherit_id" ref="stock.view_picking_type_form"/>
+            <field name="arch" type="xml">
+                <xpath expr="//field[@name='default_location_dest_id']" position="after">
+                        <field name="assign_lot"/>
+                        <field name="owner"/>
+                        <field name="lead"/>
+                        <field name="owner_w" attrs="{'readonly': [('owner', '=', False)] }"/>
+                        <field name="lead_w" attrs="{'readonly': [('lead', '=', False)] }"/>
+                        <field name="owner_c" attrs="{'readonly': [('owner', '=', False)] }"/>
+                        <field name="lead_c" attrs="{'readonly': [('lead', '=', False)] }"/>
+                        <field name="owner_q" attrs="{'readonly': [('owner', '=', False)] }"/>
+                        <field name="lead_q" attrs="{'readonly': [('lead', '=', False)] }"/>
+                </xpath>
+
+            </field>
+        </record>
+
+            <record id="view_stock_move_operations_dvlr" model="ir.ui.view">
+            <field name="name">stock.move.operations.dvlr.form</field>
+            <field name="model">stock.move</field>
+            <field name="inherit_id" ref="stock.view_stock_move_operations"/>
+            <field name="priority">1667</field>
+            <field name="arch" type="xml">
+                <xpath expr="//field[@name='move_line_ids']" position="before">
+                   <field name="owner_id" invisible="1"/>
+                    <field name="lead_id" invisible="1" />
+                </xpath>
+                <xpath expr="//field[@name='move_line_ids']" position="attributes">
+                    <attribute name="context">
+                        {'tree_view_ref': 'stock.view_stock_move_line_operation_tree', 'default_product_uom_id': product_uom, 'default_picking_id': picking_id,
+                        'default_move_id': id, 'default_product_id': product_id, 'default_location_id': location_id, 'default_location_dest_id': location_dest_id,
+                        'default_owner_id': owner_id, 'default_lead_id':lead_id}</attribute>
+                </xpath>
+
+            </field>
+        </record>
+
+
+
+
+</odoo>
