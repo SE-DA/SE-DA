@@ -8,7 +8,7 @@ import datetime
 class Picking(models.Model):
     _inherit = "stock.picking"
 
-    @api.model
+    # @api.model
     def _get_so(self):
         lead_id = False
         owner_id = False
@@ -35,9 +35,9 @@ class Picking(models.Model):
                 'owner_id': owner_id,
             })
 
-        return True
+        return False
 
-    so_id = fields.Many2one('sale.order', 'SO', compute='_get_so')
+    so_id = fields.Many2one('sale.order', 'SO', compute="_get_so")
     lead_id = fields.Many2one('crm.lead', 'Komisja')
     owner_v = fields.Boolean(related='picking_type_id.owner', readonly=True, store=False)
     lead_v = fields.Boolean(related='picking_type_id.lead', readonly=True, store=False)
@@ -46,7 +46,7 @@ class Picking(models.Model):
     owner_c = fields.Boolean(related='picking_type_id.owner_c', readonly=True, store=False)
     lead_c = fields.Boolean(related='picking_type_id.lead_c', readonly=True, store=False)
 
-    @api.one
+    # @api.one
     def action_assign_lead(self):
         self.move_line_ids.write({'lead_id': self.lead_id.id})
 
@@ -55,7 +55,7 @@ class Picking(models.Model):
     #     res= super(Picking,self).button_validate()
     #     return res
 
-    @api.multi
+    # @api.multi
     def button_validate(self):
         lines_to_check = self.move_line_ids
         if self.picking_type_id.owner_q and not self.owner_id:
@@ -78,7 +78,7 @@ class Picking(models.Model):
 
         return super(Picking, self).button_validate()
 
-    @api.multi
+    # @api.multi
     def action_assign(self):
         if self.picking_type_id.assign_lot:
             location = self.picking_type_id.default_location_src_id.id
