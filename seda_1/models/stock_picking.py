@@ -12,6 +12,7 @@ class Picking(models.Model):
     def _get_so(self):
         lead_id = False
         owner_id = False
+        so_id = False
         if self.sale_id:
             if self.sale_id.opportunity_id:
                 lead_id = self.sale_id.opportunity_id.id
@@ -22,9 +23,12 @@ class Picking(models.Model):
             ('name', '=', self.origin),
         ])
             if mp_rec and mp_rec.sol_id:
+                lead_id = mp_rec.lead_id
+                owner_id = mp_rec.owner_id
                 if mp_rec.sol_id.order_id.opportunity_id:
                     lead_id = mp_rec.sol_id.order_id.opportunity_id.id
                 owner_id = mp_rec.sol_id.order_id.partner_id.id
+                so_id = mp_rec.sol_id and mp_rec.sol_id.order_id.id
         if lead_id and (not self.lead_w or (self.lead_w and not self.lead_id)):
             self.write({
                 'lead_id': lead_id,
@@ -34,7 +38,9 @@ class Picking(models.Model):
             self.write({
                 'owner_id': owner_id,
             })
-
+        self.write({
+            'so_id': so_id,
+        })
         return False
 
     so_id = fields.Many2one('sale.order', 'SO', compute="_get_so")
@@ -91,6 +97,10 @@ class Picking(models.Model):
             moves = self.mapped('move_lines').filtered(lambda move: move.state not in ('draft', 'cancel', 'done'))
             for move in moves:
                 if move.product_id.tracking != 'lot':
+                    super(Picking,self).action_assign()
+                            # move.product_id, move.location_id, move.product_uom_qty, lot_id=False,
+                            # package_id=False, owner_id=False, strict=True)
+                    # move.write({'state': 'assigned'})
                     continue
                 qty_to = move.product_uom_qty
                 for line in move.move_line_ids:
@@ -104,7 +114,7 @@ class Picking(models.Model):
                         ('quantity', '>=', qty_to),
                         ('lot_id', 'in', lot_ids),
                         ('location_id','in',locs_ids),
-                        ('reserved_quantity','=',0)
+                        # ('reserved_quantity','=',0)
                     ],order='quantity asc, in_date', limit=1)
                     if quants:
 
@@ -129,10 +139,10 @@ class Picking(models.Model):
                         # self.env.cr.execute(
                         #     """update stock_quant set reserved_quantity = %s where id = %s""" % ( quants[0].quantity,  quants[0].id))
                         # quants[0].write({'reserved_quantity':qty})
-                        move.write({'state':'assigned'})
+                        # move.write({'state':'assigned'})
                         self.env['stock.quant']._update_reserved_quantity(
                             move.product_id, quants[0].location_id, qty, lot_id=quants[0].lot_id,
-                            package_id=False, owner_id=quants[0].lot_id.owner_id, strict=True
+                            package_id=False, owner_id=False, strict=True
                         )
                         # to_unassign = sml_obj.search([
                         # ('lot_id', '=', quants[0].lot_id.id),

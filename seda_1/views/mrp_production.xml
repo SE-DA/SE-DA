@@ -9,7 +9,7 @@
             <field name="arch" type="xml">
                 <xpath expr="//field[@name='origin']" position="after">
                     <field name="sol_id" invisible="1"/>
-                    <!--<field name="so_id" invisible="1"/>-->
+                    <field name="so_id" invisible="1"/>
                     <field name="lead_id"/>
                     <field name="owner_id"/>
                 </xpath>

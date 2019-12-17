@@ -8,7 +8,7 @@
             <field name="arch" type="xml">
 
                 <xpath expr="//field[@name='owner_id']" position="before">
-<!--                    <field name="so_id" invisible="1"/>-->
+                    <field name="so_id" invisible="1"/>
                     <field name="owner_v" invisible="1"/>
                     <field name="lead_v" invisible="1" />
                     <field name="owner_w" invisible="1"/>
