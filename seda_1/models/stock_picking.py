@@ -118,7 +118,7 @@ class Picking(models.Model):
                     ],order='quantity asc, in_date', limit=1)
                     if quants:
 
-                        if move.product_id.lot_reservation_type ==1:
+                        if move.product_id.lot_reservation_type =='1':
                             qty = quants[0].quantity
                         else:
                             qty = qty_to
@@ -136,13 +136,14 @@ class Picking(models.Model):
 
                             }
                         sm = sml_obj.create(vals)
+                        owner_id_d = quants[0].lot_id.owner_id
                         # self.env.cr.execute(
                         #     """update stock_quant set reserved_quantity = %s where id = %s""" % ( quants[0].quantity,  quants[0].id))
                         # quants[0].write({'reserved_quantity':qty})
                         # move.write({'state':'assigned'})
                         self.env['stock.quant']._update_reserved_quantity(
                             move.product_id, quants[0].location_id, qty, lot_id=quants[0].lot_id,
-                            package_id=False, owner_id=False, strict=True
+                            package_id=False, owner_id=owner_id_d, strict=True
                         )
                         # to_unassign = sml_obj.search([
                         # ('lot_id', '=', quants[0].lot_id.id),
