@@ -103,17 +103,31 @@ class Picking(models.Model):
                     # move.write({'state': 'assigned'})
                     continue
                 qty_to = move.product_uom_qty
+                boms = []
+                if self.so_id.id:
+                    sol = self.env['sale.order.line'].search([
+                    # ('product_id', '=',move.product_id.id ),
+                    ('order_id', '=', self.so_id.id),
+                    ],)
+                    boms = [x.bom_id for x in sol]
+                lots_ids = []
+                for y in boms:
+                    for x in y.bom_line_ids:
+                        if x.lot_id:
+                            lots_ids.append(x.lot_id.id)
                 for line in move.move_line_ids:
                     qty_to -= line.product_uom_qty
                 if qty_to <=0:
                     continue
                 lots = self.env['stock.production.lot'].search(['&','&',('product_id','=',move.product_id.id),('owner_id','=',self.owner_id.id),('lead_id','=',self.lead_id.id)])
                 lot_ids = [x.id for x in lots]
-                if lot_ids:
+                if lots_ids:
                     quants = self.env['stock.quant'].search([
                         ('quantity', '>=', qty_to),
-                        ('lot_id', 'in', lot_ids),
+                        ('lot_id', 'in', lots_ids),
                         ('location_id','in',locs_ids),
+                        ('product_id', '=', move.product_id.id),
+
                         # ('reserved_quantity','=',0)
                     ],order='quantity asc, in_date', limit=1)
                     if quants:
@@ -162,8 +176,9 @@ class Picking(models.Model):
                     else:
                         quants = self.env['stock.quant'].search([
                             ('quantity', '>', 0),
-                            ('lot_id', 'in', lot_ids),
+                            ('lot_id', 'in', lots_ids),
                             ('reserved_quantity', '=', 0),
+                            ('product_id', '=', move.product_id.id),
                             ('location_id', 'in', locs_ids),
                         ],order='quantity desc')
                         quants_ok = []
@@ -171,9 +186,22 @@ class Picking(models.Model):
                         for quant in quants:
                             qty -= quant.quantity
                             quants_ok.append(quant)
-                            if qty <0:
+                            if qty <=0:
                                 break
                         # if qty < 0:
+                        if qty >0:
+                            quants = self.env['stock.quant'].search([
+                                ('quantity', '>', 0),
+                                ('lot_id', 'in', lot_ids),
+                                ('reserved_quantity', '=', 0),
+                                ('product_id', '=', move.product_id.id),
+                                ('location_id', 'in', locs_ids),
+                            ], order='quantity desc')
+                            for quant in quants:
+                                qty -= quant.quantity
+                                quants_ok.append(quant)
+                                if qty < 0:
+                                    break
                         for quant in quants_ok:
                             vals = {'move_id': move.id,
                                     'product_id': move.product_id.id,

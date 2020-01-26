@@ -8,6 +8,7 @@
         <field name="arch" type="xml">
             <xpath expr="//field[@name='tracking']" position="after">
                 <field name="lot_reservation_type" />
+                <field name="owner_id"/>
             </xpath>
         </field>
     </record>

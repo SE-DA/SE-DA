@@ -39,3 +39,15 @@ class MrpProduction(models.Model):
     lead_id = fields.Many2one('crm.lead', 'Komisja', related='sol_id.order_id.opportunity_id')
 
 
+class MrpBomLine(models.Model):
+    _inherit = 'mrp.bom.line'
+
+    lot_id = fields.Many2one('stock.production.lot', 'LOT')
+
+
+class MrpBomVariant(models.Model):
+    _name = 'mrp.bom.variant'
+
+
+class MrpBomVariantLine(models.Model):
+    _name = 'mrp.bom.variant.line'
