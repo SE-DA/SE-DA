@@ -7,10 +7,11 @@ import datetime
 class SaleOrderLine(models.Model):
     _inherit = 'sale.order.line'
 
+    product_tmpl_id = fields.Many2one('product.template','Prod_tmpl',related='product_id.product_tmpl_id')
+
     bom_id = fields.Many2one(
         'mrp.bom', 'Bill of Material',
         states={'done': [('readonly', True)]})  # Add domain
-    product_tmpl_id = fields.Many2one('product.template', 'Prod_tmpl', related='product_id.product_tmpl_id')
 
 
 class MrpBom(models.Model):

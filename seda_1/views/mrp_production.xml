@@ -24,7 +24,7 @@
             <field name="priority">1666</field>
             <field name="arch" type="xml">
                 <xpath expr="//field[@name='product_id']" position="after">
-                    <field name="lot_id"/>
+                    <field name="lot_id" domain="['&amp;','&amp;',('product_id','=',product_id),('owner_id','=',parent.owner_id),('lead_id','=',parent.lead_id)]"/>
                 </xpath>
 
             </field>
@@ -36,8 +36,12 @@
             <field name="inherit_id" ref="mrp.mrp_bom_form_view"/>
             <field name="priority">1666</field>
             <field name="arch" type="xml">
+                <xpath expr="//field[@name='product_id']" position="after">
+                    <field name="owner_id"/>
+                    <field name="lead_id" domain="[('partner_id', '=',owner_id )]"/>
+                </xpath>
                 <xpath expr="//field[@name='bom_line_ids']/tree/field[@name='product_id']" position="after">
-                    <field name="lot_id"/>
+                    <field name="lot_id" domain="['&amp;','&amp;',('product_id','=',product_id),('owner_id','=',parent.owner_id),('lead_id','=',parent.lead_id)]"/>
                 </xpath>
 
             </field>

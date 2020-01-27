@@ -181,6 +181,7 @@ class Picking(models.Model):
                             ('product_id', '=', move.product_id.id),
                             ('location_id', 'in', locs_ids),
                         ],order='quantity desc')
+
                         quants_ok = []
                         qty = move.product_uom_qty
                         for quant in quants:

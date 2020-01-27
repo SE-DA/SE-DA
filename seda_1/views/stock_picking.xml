@@ -4,7 +4,6 @@
         <record id="view_picking_dvlr_form" model="ir.ui.view">
             <field name="name">delivery.stock.picking_dvlr.form</field>
             <field name="model">stock.picking</field>
-            <field name="priority">1666</field>
             <field name="inherit_id" ref="stock.view_picking_form"/>
             <field name="arch" type="xml">
 
