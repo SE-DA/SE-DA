@@ -121,7 +121,7 @@ class Picking(models.Model):
                     continue
                 lots = self.env['stock.production.lot'].search(['&','&',('product_id','=',move.product_id.id),('owner_id','=',self.owner_id.id),('lead_id','=',self.lead_id.id)])
                 lot_ids = [x.id for x in lots]
-                if lots_ids:
+                if lots_ids or lot_ids:
                     quants = self.env['stock.quant'].search([
                         ('quantity', '>=', qty_to),
                         ('lot_id', 'in', lots_ids),
