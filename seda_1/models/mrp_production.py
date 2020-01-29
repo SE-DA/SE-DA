@@ -38,6 +38,59 @@ class MrpProduction(models.Model):
     owner_id = fields.Many2one('res.partner', 'Właściciel', related='sol_id.order_id.partner_id')
     lead_id = fields.Many2one('crm.lead', 'Komisja', related='sol_id.order_id.opportunity_id')
 
+    def button_mark_done(self):
+        res = super(MrpProduction, self).button_mark_done()
+        group_id = self.procurement_group_id.id
+        lot_ids = []
+        if group_id:
+            move_ids1 = self.env['stock.move'].search([('group_id', '=', group_id)])
+            if move_ids1:
+                move_ids = [x.id for x in move_ids1]
+                lot_ids1 = self.env['stock.move.line'].search(['&',('move_id', 'in', move_ids),('product_id','!=',self.product_id.id)])
+                for sm in lot_ids1:
+                    if sm.lot_id and sm.lot_id.id not in lot_ids:
+                        lot_ids.append(sm.lot_id.id)
+                if lot_ids:
+                    for lot in lot_ids:
+                        lot_rec = self.env['stock.production.lot'].browse(lot)
+                        quants = self.env['stock.quant'].search([
+                            ('quantity', '>', 0),
+                            ('lot_id', '=', lot_rec.id),
+                            ('product_id', '=', lot_rec.product_id.id),
+                            ('location_id', '=', 17),
+                        ], order='quantity desc', limit=1)
+                        if quants:
+                            picking = self.env['stock.picking'].create({
+                                'location_id': quants.location_id.id,
+                                'location_dest_id': 8,
+                                'picking_type_id': 5,
+                                'name':self.name+'-R',
+                            })
+
+                            values = {
+                                    'lot_name':lot_rec.name,
+                                    'lot_id':lot_rec.id,
+                                    'reference': self.name+'-R',
+                                    'product_id': lot_rec.product_id.id,
+                                    'product_uom_id': quants.product_uom_id.id,
+                                    'product_uom_qty': quants.quantity,
+                                    'location_id': quants.location_id.id,
+                                    'location_dest_id': 8,
+                                    # 'group_id': group_id,
+                                    # 'origin': self.name,
+                                    'picking_id': picking.id,
+                                    # 'state': 'waiting',
+                                    'company_id': self.company_id.id,
+                                    'owner_id':lot_rec.owner_id.id
+                                }
+                            move_id = self.env['stock.move.line'].create(values)
+                            self.env['stock.quant']._update_reserved_quantity(
+                                lot_rec.product_id, quants.location_id, quants.quantity, lot_id=lot_rec,
+                                package_id=False, owner_id=lot_rec.owner_id, strict=True
+                            )
+
+        return res
+
 
 class MrpBomLine(models.Model):
     _inherit = 'mrp.bom.line'
