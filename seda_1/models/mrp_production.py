@@ -67,7 +67,7 @@ class MrpProduction(models.Model):
                                     'location_dest_id': 8,
                                     'picking_type_id': 5,
                                     'name':self.name+'-R',
-                                    'state': 'waiting',
+                                    'state': 'confirmed',
                                 })
                                 picking_id = picking.id
                             values = {
