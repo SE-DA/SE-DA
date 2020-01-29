@@ -41,6 +41,7 @@ class MrpProduction(models.Model):
     def button_mark_done(self):
         res = super(MrpProduction, self).button_mark_done()
         group_id = self.procurement_group_id.id
+        picking_id = False
         lot_ids = []
         if group_id:
             move_ids1 = self.env['stock.move'].search([('group_id', '=', group_id)])
@@ -60,13 +61,14 @@ class MrpProduction(models.Model):
                             ('location_id', '=', 17),
                         ], order='quantity desc', limit=1)
                         if quants:
-                            picking = self.env['stock.picking'].create({
-                                'location_id': quants.location_id.id,
-                                'location_dest_id': 8,
-                                'picking_type_id': 5,
-                                'name':self.name+'-R',
-                            })
-
+                            if not picking_id:
+                                picking = self.env['stock.picking'].create({
+                                    'location_id': quants.location_id.id,
+                                    'location_dest_id': 8,
+                                    'picking_type_id': 5,
+                                    'name':self.name+'-R',
+                                })
+                                picking_id = picking.id
                             values = {
                                     'lot_name':lot_rec.name,
                                     'lot_id':lot_rec.id,
@@ -78,7 +80,7 @@ class MrpProduction(models.Model):
                                     'location_dest_id': 8,
                                     # 'group_id': group_id,
                                     # 'origin': self.name,
-                                    'picking_id': picking.id,
+                                    'picking_id': picking_id,
                                     # 'state': 'waiting',
                                     'company_id': self.company_id.id,
                                     'owner_id':lot_rec.owner_id.id
