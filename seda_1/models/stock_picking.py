@@ -82,7 +82,11 @@ class Picking(models.Model):
             if line.lead_id.id != self.lead_id.id:
                 raise UserError('Komisja niezgodna z zamówieniem')
 
-        return super(Picking, self).button_validate()
+        res =  super(Picking, self).button_validate()
+        for line in lines_to_check:
+            line.lot_id._get_pq()
+
+        return res
 
     # @api.multi
     def action_assign(self):
