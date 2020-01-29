@@ -9,6 +9,7 @@
             <xpath expr="//group[@name='main_group']/group/field[@name='ref']" position="after">
                 <field name="lead_id" domain="[('partner_id', '=',owner_id )]" options="{'no_create': True,}"/>
                 <field name="owner_id" readonly="0"/>
+                <field name="positive_q" invisible="1"/>
             </xpath>
         </field>
     </record>
