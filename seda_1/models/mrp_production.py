@@ -67,7 +67,7 @@ class MrpProduction(models.Model):
                                     'location_dest_id': 8,
                                     'picking_type_id': 5,
                                     'name':self.name+'-R',
-                                    'state': 'confirmed',
+                                    # 'state': 'confirmed',
                                 })
                                 picking_id = picking.id
                             values = {
@@ -91,6 +91,7 @@ class MrpProduction(models.Model):
                                 lot_rec.product_id, quants.location_id, quants.quantity, lot_id=lot_rec,
                                 package_id=False, owner_id=lot_rec.owner_id, strict=True
                             )
+                    picking.write({'state':'confirmed'})
 
         return res
 
