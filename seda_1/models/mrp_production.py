@@ -43,6 +43,7 @@ class MrpProduction(models.Model):
         group_id = self.procurement_group_id.id
         picking_id = False
         lot_ids = []
+        picking = False
         if group_id:
             move_ids1 = self.env['stock.move'].search([('group_id', '=', group_id)])
             if move_ids1:
@@ -91,7 +92,8 @@ class MrpProduction(models.Model):
                                 lot_rec.product_id, quants.location_id, quants.quantity, lot_id=lot_rec,
                                 package_id=False, owner_id=lot_rec.owner_id, strict=True
                             )
-                    picking.write({'state':'confirmed'})
+                    if picking:
+                        picking.write({'state':'confirmed'})
 
         return res
 
