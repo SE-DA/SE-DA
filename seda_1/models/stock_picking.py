@@ -83,6 +83,7 @@ class Picking(models.Model):
                 raise UserError('Komisja niezgodna z zamówieniem')
 
         res =  super(Picking, self).button_validate()
+        lines_to_check = self.move_line_ids
         for line in lines_to_check:
             line.lot_id._get_pq()
 
