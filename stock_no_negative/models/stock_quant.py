@@ -10,7 +10,7 @@ from odoo.tools import config, float_compare
 class StockQuant(models.Model):
     _inherit = 'stock.quant'
 
-    @api.multi
+    # @api.multi
     @api.constrains('product_id', 'quantity')
     def check_negative_qty(self):
         p = self.env['decimal.precision'].precision_get(
