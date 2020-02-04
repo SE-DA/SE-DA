@@ -10,6 +10,17 @@ from odoo.tools import config, float_compare
 class StockQuant(models.Model):
     _inherit = 'stock.quant'
 
+    @api.model
+    def _update_available_quantity(self, product_id, location_id, quantity, lot_id=None, package_id=None, owner_id=None,
+                                   in_date=None):
+        ctx = dict(self._context)
+        if ctx.get('active_model',False)=='stock.picking.type' and ctx.get('active_id',False):
+            change_lot_owner = self.env['stock.picking.type'].browse(ctx.get('active_id',False)).owner_w
+            if not change_lot_owner and lot_id:
+                owner_id = lot_id.owner_id
+        res = super(StockQuant, self)._update_available_quantity(product_id, location_id, quantity, lot_id, package_id, owner_id, in_date)
+        return res
+
     # @api.multi
     @api.constrains('product_id', 'quantity')
     def check_negative_qty(self):
