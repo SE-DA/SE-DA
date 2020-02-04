@@ -9,6 +9,41 @@ class MrpProduction(models.Model):
     _description = 'Production'
     _inherit = 'mrp.production'
 
+    def action_assign(self):
+        for production in self:
+            for move in production.move_raw_ids:
+                if move.bom_line_id.lot_id.owner_id != self.owner_id and self.state != 'done':
+
+                    available_quantity = self.env['stock.quant']._get_available_quantity(
+                        move.product_id, move.location_id, lot_id=move.bom_line_id.lot_id, package_id=False,
+                        owner_id=move.bom_line_id.lot_id.owner_id, strict=True)
+
+                    qty= min(move.product_qty-move.reserved_availability,available_quantity)
+                    if qty:
+                        sml_obj = self.env['stock.move.line']
+                        vals = {'move_id': move.id,
+                                'product_id': move.product_id.id,
+                                'product_uom_id': move.product_uom.id,
+                                'location_id': move.location_id.id,
+                                'location_dest_id': move.picking_type_id.default_location_dest_id.id,
+                                'picking_id': move.picking_id.id,
+                                'product_uom_qty': qty,
+                                'lot_id': move.bom_line_id.lot_id.id,
+                                'owner_id': move.bom_line_id.lot_id.owner_id.id,
+                                'lead_id': move.bom_line_id.lot_id.lead_id.id,
+                                'state': 'assigned'
+
+                                }
+                        sm = sml_obj.create(vals)
+                        self.env['stock.quant']._update_reserved_quantity(
+                            move.product_id, move.location_id, qty, lot_id=move.bom_line_id.lot_id,
+                            package_id=False, owner_id=move.bom_line_id.lot_id.owner_id, strict=True
+                        )
+        res = super(MrpProduction, self).action_assign()
+        return res
+
+
+
     def _get_so(self):
         sm_rec = self.env['stock.move'].search([
             ('created_production_id', '=', self.id),
