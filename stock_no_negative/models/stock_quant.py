@@ -16,8 +16,11 @@ class StockQuant(models.Model):
         ctx = dict(self._context)
         if ctx.get('active_model',False)=='stock.picking.type' and ctx.get('active_id',False):
             change_lot_owner = self.env['stock.picking.type'].browse(ctx.get('active_id',False)).owner_w
-            if not change_lot_owner and lot_id:
+            if not change_lot_owner and lot_id :
                 owner_id = lot_id.owner_id
+            if product_id.tracking =='none':
+                owner_id = product_id.owner_id
+
         res = super(StockQuant, self)._update_available_quantity(product_id, location_id, quantity, lot_id, package_id, owner_id, in_date)
         return res
 

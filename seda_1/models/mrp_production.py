@@ -14,9 +14,12 @@ class MrpProduction(models.Model):
             for move in production.move_raw_ids:
                 if move.bom_line_id.lot_id.owner_id != self.owner_id and self.state != 'done':
 
+                    owner_id = move.bom_line_id.lot_id.owner_id
+                    if move.product_id.tracking == 'none':
+                        owner_id = move.product_id.owner_id
                     available_quantity = self.env['stock.quant']._get_available_quantity(
                         move.product_id, move.location_id, lot_id=move.bom_line_id.lot_id, package_id=False,
-                        owner_id=move.bom_line_id.lot_id.owner_id, strict=True)
+                        owner_id=owner_id, strict=True)
 
                     qty= min(move.product_qty-move.reserved_availability,available_quantity)
                     if qty:
@@ -29,7 +32,7 @@ class MrpProduction(models.Model):
                                 'picking_id': move.picking_id.id,
                                 'product_uom_qty': qty,
                                 'lot_id': move.bom_line_id.lot_id.id,
-                                'owner_id': move.bom_line_id.lot_id.owner_id.id,
+                                'owner_id': owner_id.id,
                                 'lead_id': move.bom_line_id.lot_id.lead_id.id,
                                 'state': 'assigned'
 
@@ -37,12 +40,11 @@ class MrpProduction(models.Model):
                         sm = sml_obj.create(vals)
                         self.env['stock.quant']._update_reserved_quantity(
                             move.product_id, move.location_id, qty, lot_id=move.bom_line_id.lot_id,
-                            package_id=False, owner_id=move.bom_line_id.lot_id.owner_id, strict=True
+                            package_id=False, owner_id=owner_id, strict=True
                         )
+                        move.write({'state': 'assigned'})
         res = super(MrpProduction, self).action_assign()
         return res
-
-
 
     def _get_so(self):
         sm_rec = self.env['stock.move'].search([

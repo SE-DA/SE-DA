@@ -17,5 +17,9 @@ class SaleOrderLine(models.Model):
 class MrpBom(models.Model):
     _inherit = ['mrp.bom']
 
+    @api.onchange('owner_id')
+    def _onchange_owner_id(self):
+        self.lead_id = False
+
     lead_id = fields.Many2one('crm.lead', 'Komisja')
     owner_id = fields.Many2one('res.partner', 'Właściciel')
