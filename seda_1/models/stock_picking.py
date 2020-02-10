@@ -361,6 +361,7 @@ class StockMoveLine(models.Model):
     @api.returns('self', lambda value: value.id)
     def create(self, vals):
         ctx = dict(self._context)
+        owner_id = False
         if ctx and isinstance(ctx,dict) and ctx.get('default_picking_type_id',0) == 1 and ctx.get('default_owner_id',False):
             owner_id = ctx.get('default_owner_id',False)
         if isinstance(vals,list):
