@@ -128,8 +128,9 @@ class Picking(models.Model):
                         ('product_id', '=', move.product_id.id),
                         ('owner_id', '=', owner_id.id)
                     ], order='quantity asc, in_date', limit=1)
-                        qty = quants[0].quantity
+
                     if quants:
+                        qty = quants[0].quantity
                         vals = {'move_id': move.id,
                                 'product_id': move.product_id.id,
                                 'product_uom_id': move.product_uom.id,
@@ -156,15 +157,17 @@ class Picking(models.Model):
                             ('product_id', '=', move.product_id.id),
                             ('owner_id', '=', move.product_id.owner_id.id)
                         ], order='quantity asc, in_date', limit=1)
-                        qty = qty_to
-                        if not quants:
+                        if quants:
+                            qty = qty_to
+                        else:
                             quants = self.env['stock.quant'].search([
                                 ('quantity', '>=', 1),
                                 ('location_id', 'in', locs_ids),
                                 ('product_id', '=', move.product_id.id),
                                 ('owner_id', '=', move.product_id.owner_id.id)
                             ], order='quantity desc, in_date', limit=1)
-                            qty = quants[0].quantity
+                            if quants:
+                                qty = quants[0].quantity
                         if quants:
                             vals = {'move_id': move.id,
                                     'product_id': move.product_id.id,
@@ -185,12 +188,12 @@ class Picking(models.Model):
                                 package_id=False, owner_id=owner_id_d, strict=True
                             )
                             qty_to -= qty
-                            if qty_to<=0:
-                                move.write({'state': 'assigned'})
-                                for line in move.move_line_ids:
-                                    line.write({'state': 'assigned'})
-                            else:
-                                move.write({'state': 'partially_available'})
+                        if qty_to<=0:
+                            move.write({'state': 'assigned'})
+                            for line in move.move_line_ids:
+                                line.write({'state': 'assigned'})
+                        else:
+                            move.write({'state': 'partially_available'})
                     # super(Picking,self).action_assign()
                     continue
                 else:
@@ -295,7 +298,6 @@ class Picking(models.Model):
                                     move.product_id, quant.location_id,  quant.quantity, lot_id=quant.lot_id,
                                     package_id=False, owner_id=quant.lot_id.owner_id, strict=True
                                 )
-
                             move.write({'state': 'partially_available'})
                             if qty <=0:
                                 move.write({'state': 'assigned'})
@@ -332,6 +334,7 @@ class StockMoveLine(models.Model):
     def write(self, vals):
 
         vals2 = {}
+        meh = self
         if vals.get('lot_id',False):
             lot_rec = self.env['stock.production.lot'].browse(vals.get('lot_id',False))
             if self.picking_id.lead_w:
@@ -346,7 +349,6 @@ class StockMoveLine(models.Model):
         if vals2:
             vals.update(vals2)
             lot_rec.write(vals2)
-
         if vals.get('owner_id', False):
             ssm = []
             for sml in self:
