@@ -353,8 +353,7 @@ class StockMoveLine(models.Model):
                 if not(sml.owner_id.id != vals.get('owner_id', False) and sml.product_id.tracking=='none'):
                     ssm.append(sml.id)
             meh = self.env['stock.move.line'].browse(ssm)
-        else:
-            res = super(StockMoveLine, self).write(vals)
+        res = super(StockMoveLine, meh).write(vals)
 
     @api.model_create_multi
     @api.returns('self', lambda value: value.id)
