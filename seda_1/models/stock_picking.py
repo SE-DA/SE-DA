@@ -360,14 +360,21 @@ class StockMoveLine(models.Model):
     @api.model_create_multi
     @api.returns('self', lambda value: value.id)
     def create(self, vals):
+        ctx = dict(self._context)
+        if ctx and isinstance(ctx,dict) and ctx.get('default_picking_type_id',0) == 1 and ctx.get('default_owner_id',False):
+            owner_id = ctx.get('default_owner_id',False)
         if isinstance(vals,list):
             for val in vals:
+                if not val.get('owner_id',False) and owner_id:
+                    val['owner_id'] = owner_id
                 if val.get('lot_id',False):
                     lot_rec = self.env['stock.production.lot'].browse(val.get('lot_id',False))
                     if not val.get('lead_id',False) and not val.get('owner_id',False):
                         val['lead_id'] = lot_rec.lead_id.id
                         val['owner_id'] = lot_rec.owner_id.id
         if isinstance(vals,dict):
+            if not val.get('owner_id', False) and owner_id:
+                val['owner_id'] = owner_id
             if vals.get('lot_id', False):
                 lot_rec = self.env['stock.production.lot'].browse(vals.get('lot_id', False))
                 if not vals.get('lead_id', False) and not vals.get('owner_id', False):
