@@ -128,9 +128,8 @@ class Picking(models.Model):
                         ('product_id', '=', move.product_id.id),
                         ('owner_id', '=', owner_id.id)
                     ], order='quantity asc, in_date', limit=1)
-
-                    if quants:
                         qty = quants[0].quantity
+                    if quants:
                         vals = {'move_id': move.id,
                                 'product_id': move.product_id.id,
                                 'product_uom_id': move.product_uom.id,
@@ -190,11 +189,15 @@ class Picking(models.Model):
                             qty_to -= qty
                         if qty_to<=0:
                             move.write({'state': 'assigned'})
+                            self.write({'state': 'assigned'})
                             for line in move.move_line_ids:
                                 line.write({'state': 'assigned'})
                         else:
                             move.write({'state': 'partially_available'})
                     # super(Picking,self).action_assign()
+                    else:
+                        move.write({'state': 'assigned'})
+                        self.write({'state': 'assigned'})
                     continue
                 else:
                     qty_to = move.product_uom_qty
@@ -301,13 +304,13 @@ class Picking(models.Model):
                             move.write({'state': 'partially_available'})
                             if qty <=0:
                                 move.write({'state': 'assigned'})
-        moves = self.mapped('move_lines').filtered(lambda move: move.state not in ('available'))
+        moves = self.mapped('move_lines').filtered(lambda move: move.state not in ('assigned'))
         if moves:
             self.write({'state':'confirmed'})
-            return True
+            return super(Picking, self).action_assign()
         else:
             self.write({'state': 'assigned'})
-            return super(Picking, self).action_assign()
+            return True
 
 
 
