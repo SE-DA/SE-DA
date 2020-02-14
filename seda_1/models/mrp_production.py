@@ -99,6 +99,9 @@ class MrpProduction(models.Model):
                             ('location_id', '=', 17),
                         ], order='quantity desc', limit=1)
                         if quants:
+                            qty = quants.quantity-quants.reserved_quantity
+                            if qty <=0:
+                                continue
                             if not picking_id:
                                 picking = self.env['stock.picking'].create({
                                     'location_id': quants.location_id.id,
@@ -114,7 +117,7 @@ class MrpProduction(models.Model):
                                     'reference': self.name+'-R',
                                     'product_id': lot_rec.product_id.id,
                                     'product_uom_id': quants.product_uom_id.id,
-                                    'product_uom_qty': quants.quantity,
+                                    'product_uom_qty': qty,
                                     'location_id': quants.location_id.id,
                                     'location_dest_id': 8,
                                     # 'group_id': group_id,
@@ -126,7 +129,7 @@ class MrpProduction(models.Model):
                                 }
                             move_id = self.env['stock.move.line'].create(values)
                             self.env['stock.quant']._update_reserved_quantity(
-                                lot_rec.product_id, quants.location_id, quants.quantity, lot_id=lot_rec,
+                                lot_rec.product_id, quants.location_id, qty, lot_id=lot_rec,
                                 package_id=False, owner_id=lot_rec.owner_id, strict=True
                             )
                     if picking:
