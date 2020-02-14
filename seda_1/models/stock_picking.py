@@ -128,7 +128,8 @@ class Picking(models.Model):
                         ('product_id', '=', move.product_id.id),
                         ('owner_id', '=', owner_id.id)
                     ], order='quantity asc, in_date', limit=1)
-                        qty = quants[0].quantity
+                        if quants:
+                            qty = quants[0].quantity
                     if quants:
                         vals = {'move_id': move.id,
                                 'product_id': move.product_id.id,
