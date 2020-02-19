@@ -412,14 +412,18 @@ class StockMoveLine(models.Model):
     def create(self, vals):
         ctx = dict(self._context)
         owner_id = False
+        in_picking = False
         if ctx and isinstance(ctx,dict) and ctx.get('default_picking_type_id',0) == 1:
-            if self.owner_id:
-                owner_id = self.owner_id.id
+            in_picking=True
             if ctx.get('default_owner_id',False):
                 owner_id = ctx.get('default_owner_id',False)
 
         if isinstance(vals,list):
             for val in vals:
+                if not owner_id and val.get('move_id',False) and in_picking:
+                    sm_rec = self.env['stock.move'].browse(val.get('move_id', False))
+                    owner_id = sm_rec.owner_id and sm_rec.owner_id.id
+
                 if not val.get('owner_id',False) and owner_id:
                     val['owner_id'] = owner_id
                 if val.get('lot_id',False):
@@ -428,8 +432,11 @@ class StockMoveLine(models.Model):
                         val['lead_id'] = lot_rec.lead_id.id
                         val['owner_id'] = lot_rec.owner_id.id
         if isinstance(vals,dict):
-            if not val.get('owner_id', False) and owner_id:
-                val['owner_id'] = owner_id
+            if not owner_id and vals.get('move_id', False) and in_picking:
+                sm_rec = self.env['stock.move'].browse(vals.get('move_id', False))
+                owner_id = sm_rec.owner_id and sm_rec.owner_id.id
+            if not vals.get('owner_id', False) and owner_id:
+                vals['owner_id'] = owner_id
             if vals.get('lot_id', False):
                 lot_rec = self.env['stock.production.lot'].browse(vals.get('lot_id', False))
                 if not vals.get('lead_id', False) and not vals.get('owner_id', False):
