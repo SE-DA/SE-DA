@@ -11,8 +11,17 @@ class MrpProduction(models.Model):
 
     def action_assign(self):
         for production in self:
+            bom_line_products = {}
+            multiple_use_bom = []
+            for line in production.move_raw_ids:
+                if line.bom_line_id.product_id.id not in bom_line_products:
+                    bom_line_products[line.bom_line_id.product_id.id] = [(line.bom_line_id.lot_id.id,line.bom_line_id.product_qty)]
+                else:
+                    bom_line_products[line.bom_line_id.product_id.id].append((line.bom_line_id.lot_id.id,line.bom_line_id.product_qty))
+                    multiple_use_bom.append(line.bom_line_id.product_id.id)
+
             for move in production.move_raw_ids:
-                if move.bom_line_id.lot_id.owner_id != self.owner_id and self.state != 'done':
+                if (move.bom_line_id.lot_id.owner_id != self.owner_id and self.state != 'done') or move.product_id.id in multiple_use_bom:
 
                     owner_id = move.bom_line_id.lot_id.owner_id
                     if move.product_id.tracking == 'none':
