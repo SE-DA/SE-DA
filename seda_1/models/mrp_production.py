@@ -146,6 +146,22 @@ class MrpProduction(models.Model):
 
         return res
 
+    def write(self, vals):
+        bom_line_products = {}
+        multiple_use_bom = []
+        for line in self.move_raw_ids:
+            if line.bom_line_id.product_id.id not in bom_line_products:
+                bom_line_products[line.bom_line_id.product_id.id] = [
+                    (line.bom_line_id.lot_id.id, line.bom_line_id.product_qty)]
+            else:
+                bom_line_products[line.bom_line_id.product_id.id].append(
+                    (line.bom_line_id.lot_id.id, line.bom_line_id.product_qty))
+                multiple_use_bom.append(line.bom_line_id.product_id.id)
+        if multiple_use_bom:
+            self.button_unreserve()
+            self.action_assign()
+        res = super(MrpProduction, self).write(vals)
+
 
 class MrpBomLine(models.Model):
     _inherit = 'mrp.bom.line'
