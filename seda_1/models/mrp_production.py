@@ -157,7 +157,7 @@ class MrpProduction(models.Model):
                 bom_line_products[line.bom_line_id.product_id.id].append(
                     (line.bom_line_id.lot_id.id, line.bom_line_id.product_qty))
                 multiple_use_bom.append(line.bom_line_id.product_id.id)
-        if multiple_use_bom:
+        if multiple_use_bom and self.reservation_state == 'waiting' :
             sm_rec = self.env['stock.move'].search([
                 ('created_production_id', '=', self.id),
             ])
