@@ -146,30 +146,35 @@ class MrpProduction(models.Model):
 
         return res
 
-    def write(self, vals):
-        bom_line_products = {}
-        multiple_use_bom = []
-        for line in self.move_raw_ids:
-            if line.bom_line_id.product_id.id not in bom_line_products:
-                bom_line_products[line.bom_line_id.product_id.id] = [
-                    (line.bom_line_id.lot_id.id, line.bom_line_id.product_qty)]
-            else:
-                bom_line_products[line.bom_line_id.product_id.id].append(
-                    (line.bom_line_id.lot_id.id, line.bom_line_id.product_qty))
-                multiple_use_bom.append(line.bom_line_id.product_id.id)
-        if multiple_use_bom and self.reservation_state == 'waiting' :
-            sm_rec = self.env['stock.move'].search([
-                ('created_production_id', '=', self.id),
-            ])
-            if sm_rec:
-                vals['sol_id'] =  sm_rec.sale_line_id.id
-                vals['lead_id'] = sm_rec.sale_line_id.order_id.opportunity_id.id
-                vals['lead_id'] = sm_rec.sale_line_id.order_id.partner_id.id
-                if sm_rec.sale_line_id.bom_id:
-                   vals['bom_id']= sm_rec.sale_line_id.bom_id.id
-            self.button_unreserve()
-            self.action_assign()
-        res = super(MrpProduction, self).write(vals)
+    # def write(self, vals):
+    #     bom_line_products = {}
+    #     multiple_use_bom = []
+    #     for line in self.move_raw_ids:
+    #         if line.bom_line_id.product_id.id not in bom_line_products:
+    #             bom_line_products[line.bom_line_id.product_id.id] = [
+    #                 (line.bom_line_id.lot_id.id, line.bom_line_id.product_qty)]
+    #         else:
+    #             bom_line_products[line.bom_line_id.product_id.id].append(
+    #                 (line.bom_line_id.lot_id.id, line.bom_line_id.product_qty))
+    #             multiple_use_bom.append(line.bom_line_id.product_id.id)
+    #     if multiple_use_bom and self.reservation_state == 'waiting' :
+    #         sm_rec = self.env['stock.move'].search([
+    #             ('created_production_id', '=', self.id),
+    #         ])
+    #         if sm_rec:
+    #             vals['sol_id'] =  sm_rec.sale_line_id.id
+    #             vals['lead_id'] = sm_rec.sale_line_id.order_id.opportunity_id.id
+    #             vals['lead_id'] = sm_rec.sale_line_id.order_id.partner_id.id
+    #             if sm_rec.sale_line_id.bom_id:
+    #                vals['bom_id']= sm_rec.sale_line_id.bom_id.id
+    #         self.button_unreserve()
+    #         self.action_assign()
+    #         # self._get_so()
+    #         # self._get_lead()
+    #         # self._get_owner()
+    #
+    #
+    #     res = super(MrpProduction, self).write(vals)
 
 
 class MrpBomLine(models.Model):
