@@ -37,7 +37,7 @@ class MrpProduction(models.Model):
                                 'product_id': move.product_id.id,
                                 'product_uom_id': move.product_uom.id,
                                 'location_id': move.location_id.id,
-                                'location_dest_id': move.picking_type_id.default_location_dest_id.id,
+                                'location_dest_id': 15,
                                 'picking_id': move.picking_id.id,
                                 'product_uom_qty': qty,
                                 'lot_id': move.bom_line_id.lot_id.id,
