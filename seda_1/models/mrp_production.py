@@ -158,6 +158,15 @@ class MrpProduction(models.Model):
                     (line.bom_line_id.lot_id.id, line.bom_line_id.product_qty))
                 multiple_use_bom.append(line.bom_line_id.product_id.id)
         if multiple_use_bom:
+            sm_rec = self.env['stock.move'].search([
+                ('created_production_id', '=', self.id),
+            ])
+            if sm_rec:
+                vals['sol_id'] =  sm_rec.sale_line_id.id
+                vals['lead_id'] = sm_rec.sale_line_id.order_id.opportunity_id.id
+                vals['lead_id'] = sm_rec.sale_line_id.order_id.partner_id.id
+                if sm_rec.sale_line_id.bom_id:
+                   vals['bom_id']= sm_rec.sale_line_id.bom_id.id
             self.button_unreserve()
             self.action_assign()
         res = super(MrpProduction, self).write(vals)
