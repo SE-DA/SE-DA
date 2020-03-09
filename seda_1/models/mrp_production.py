@@ -21,7 +21,7 @@ class MrpProduction(models.Model):
                     multiple_use_bom.append(line.bom_line_id.product_id.id)
 
             for move in production.move_raw_ids:
-                if (move.bom_line_id.lot_id.owner_id != self.owner_id and self.state != 'done') or move.product_id.id in multiple_use_bom:
+                if (move.bom_line_id.lot_id.owner_id != self.owner_id and self.state != 'done') or (move.product_id.id in multiple_use_bom and self.state != 'done'):
 
                     owner_id = move.bom_line_id.lot_id.owner_id
                     if move.product_id.tracking == 'none':
@@ -83,6 +83,7 @@ class MrpProduction(models.Model):
     sol_id = fields.Many2one('sale.order.line', 'SOL', compute='_get_so')
     owner_id = fields.Many2one('res.partner', 'Właściciel', related='sol_id.order_id.partner_id')
     lead_id = fields.Many2one('crm.lead', 'Komisja', related='sol_id.order_id.opportunity_id')
+    bomed = fields.Boolean('bomed')
 
     def button_mark_done(self):
         res = super(MrpProduction, self).button_mark_done()
@@ -146,35 +147,36 @@ class MrpProduction(models.Model):
 
         return res
 
-    # def write(self, vals):
-    #     bom_line_products = {}
-    #     multiple_use_bom = []
-    #     for line in self.move_raw_ids:
-    #         if line.bom_line_id.product_id.id not in bom_line_products:
-    #             bom_line_products[line.bom_line_id.product_id.id] = [
-    #                 (line.bom_line_id.lot_id.id, line.bom_line_id.product_qty)]
-    #         else:
-    #             bom_line_products[line.bom_line_id.product_id.id].append(
-    #                 (line.bom_line_id.lot_id.id, line.bom_line_id.product_qty))
-    #             multiple_use_bom.append(line.bom_line_id.product_id.id)
-    #     if multiple_use_bom and self.reservation_state == 'waiting' :
-    #         sm_rec = self.env['stock.move'].search([
-    #             ('created_production_id', '=', self.id),
-    #         ])
-    #         if sm_rec:
-    #             vals['sol_id'] =  sm_rec.sale_line_id.id
-    #             vals['lead_id'] = sm_rec.sale_line_id.order_id.opportunity_id.id
-    #             vals['lead_id'] = sm_rec.sale_line_id.order_id.partner_id.id
-    #             if sm_rec.sale_line_id.bom_id:
-    #                vals['bom_id']= sm_rec.sale_line_id.bom_id.id
-    #         self.button_unreserve()
-    #         self.action_assign()
-    #         # self._get_so()
-    #         # self._get_lead()
-    #         # self._get_owner()
-    #
-    #
-    #     res = super(MrpProduction, self).write(vals)
+    def write(self, vals):
+        bom_line_products = {}
+        multiple_use_bom = []
+        for line in self.move_raw_ids:
+            if line.bom_line_id.product_id.id not in bom_line_products:
+                bom_line_products[line.bom_line_id.product_id.id] = [
+                    (line.bom_line_id.lot_id.id, line.bom_line_id.product_qty)]
+            else:
+                bom_line_products[line.bom_line_id.product_id.id].append(
+                    (line.bom_line_id.lot_id.id, line.bom_line_id.product_qty))
+                multiple_use_bom.append(line.bom_line_id.product_id.id)
+        if multiple_use_bom and self.reservation_state == 'assigned' and self.state!='done'  and not self.bomed:
+            sm_rec = self.env['stock.move'].search([
+                ('created_production_id', '=', self.id),
+            ])
+            vals['bomed'] = True
+            if sm_rec:
+                vals['sol_id'] =  sm_rec.sale_line_id.id
+                vals['lead_id'] = sm_rec.sale_line_id.order_id.opportunity_id.id
+                vals['lead_id'] = sm_rec.sale_line_id.order_id.partner_id.id
+                if sm_rec.sale_line_id.bom_id:
+                   vals['bom_id']= sm_rec.sale_line_id.bom_id.id
+            self.button_unreserve()
+            self.action_assign()
+            # self._get_so()
+            # self._get_lead()
+            # self._get_owner()
+
+
+        res = super(MrpProduction, self).write(vals)
 
 
 class MrpBomLine(models.Model):
