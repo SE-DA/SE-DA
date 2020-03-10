@@ -210,10 +210,60 @@ class Picking(models.Model):
                         ],)
                         boms = [x.bom_id for x in sol]
                     lots_ids = []
+                    bom_wqty = {}
                     for y in boms:
                         for x in y.bom_line_ids:
+                            if x.product_id.id != move.product_id.id:
+                                continue
                             if x.lot_id:
                                 lots_ids.append(x.lot_id.id)
+                            if x.lot_id.id not in bom_wqty.keys():
+                                bom_wqty[x.lot_id.id] = x.product_qty
+                    lot_qty_in_bom = len(bom_wqty.keys())
+                    if lot_qty_in_bom > 1:
+                        for bom_key in bom_wqty.keys():
+                            quants = self.env['stock.quant'].search([
+                                ('quantity', '>=', bom_wqty[bom_key]),
+                                ('lot_id', '=', bom_key),
+                                ('location_id', 'in', locs_ids),
+                                ('product_id', '=', move.product_id.id),
+                            ], order='quantity asc, in_date', limit=1)
+                            if not quants:
+                                raise UserError('Za mała ilość produktu w wybranym LOT!')
+                            else:
+                                if move.product_id.lot_reservation_type == '1':
+                                    qty = quants[0].quantity
+                                else:
+                                    qty = bom_wqty[bom_key]
+
+                                vals = {'move_id': move.id,
+                                        'product_id': move.product_id.id,
+                                        'product_uom_id': move.product_uom.id,
+                                        'location_id': quants[0].location_id.id,
+                                        'location_dest_id': self.picking_type_id.default_location_dest_id.id,
+                                        'picking_id': self.id,
+                                        'product_uom_qty': qty,
+                                        'lot_id': quants[0].lot_id.id,
+                                        'owner_id': quants[0].lot_id.owner_id.id,
+                                        'lead_id': quants[0].lot_id.lead_id.id,
+                                        'state': 'assigned'
+
+                                        }
+                                sm = sml_obj.create(vals)
+                                owner_id_d = quants[0].lot_id.owner_id
+                                self.env['stock.quant']._update_reserved_quantity(
+                                    move.product_id, quants[0].location_id, qty, lot_id=quants[0].lot_id,
+                                    package_id=False, owner_id=owner_id_d, strict=True
+                                )
+                        move.write({'state': 'assigned'})
+                        continue
+
+
+
+
+
+
+
                     for line in move.move_line_ids:
                         qty_to -= line.product_uom_qty
                     if qty_to <=0:
