@@ -15,7 +15,6 @@
         'views/sale_order.xml',
         'views/product_product.xml',
         'views/mrp_production.xml',
-        'views/quants.xml',
         # 'security/ir.model.access.csv'
     ],
 }
