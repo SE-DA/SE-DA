@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+
+
+        <record id="action_stock_quants_deviler" model="ir.actions.act_window">
+            <field name="name">Stock Quant</field>
+            <field name="res_model">stock.quant</field>
+            <field name="view_mode">tree,form</field>
+            <field name="context">{}</field>
+            <field name="search_view_id" ref="stock.quant_search_view"/>
+        </record>
+
+        <menuitem id="menu_quants_deviler" name="Stock quants" parent="stock.menu_warehouse_report" sequence="150" action="action_stock_quants_deviler"/>
+
+    <record id="view_stock_quant_form_deviler" model="ir.ui.view">
+        <field name="name">stock.quant.form.dvlr</field>
+        <field name="model">stock.quant</field>
+        <field name="inherit_id" ref="stock.view_stock_quant_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//form" position="attributes">
+                <attribute name="edit">true</attribute>
+            </xpath>
+            <xpath expr="//field[@name='owner_id']" position="replace">
+                <field name="owner_id" readonly="False" domain="{}"/>
+            </xpath>
+        </field>
+    </record>
+
+</odoo>
+
+
+
