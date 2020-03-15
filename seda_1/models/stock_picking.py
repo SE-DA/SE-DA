@@ -220,7 +220,7 @@ class Picking(models.Model):
                             if x.lot_id.id not in bom_wqty.keys():
                                 bom_wqty[x.lot_id.id] = x.product_qty
                     lot_qty_in_bom = len(bom_wqty.keys())
-                    if lot_qty_in_bom > 1:
+                    if lot_qty_in_bom > 1 and self.picking_type_id.id ==6:
                         for bom_key in bom_wqty.keys():
                             quants = self.env['stock.quant'].search([
                                 ('quantity', '>=', bom_wqty[bom_key]),
@@ -259,18 +259,16 @@ class Picking(models.Model):
                         continue
 
 
-
-
-
-
-
                     for line in move.move_line_ids:
                         qty_to -= line.product_uom_qty
                     if qty_to <=0:
                         continue
                     lots = self.env['stock.production.lot'].search(['&','&',('product_id','=',move.product_id.id),('owner_id','=',self.owner_id.id),('lead_id','=',self.lead_id.id)])
                     lot_ids = [x.id for x in lots]
-                    if lots_ids or lot_ids:
+                    lots2 = self.env['stock.production.lot'].search(
+                        ['&','&', ('product_id', '=', move.product_id.id), ('owner_id', '=', self.owner_id.id),('lead_id','=',False)])
+                    lot_ids2 = [x.id for x in lots2]
+                    if lots_ids or lot_ids or lot_ids2:
                         quants_ok = []
                         quants = self.env['stock.quant'].search([
                             ('quantity', '>=', qty_to),
@@ -377,6 +375,61 @@ class Picking(models.Model):
 
                                         qty -= qty_1
                                         quants_ok.append((quant,qty_1))
+                                        if qty <= 0:
+                                            break
+
+     #jeśli nie ma lotów z daną komisją, szukam dla dango właściciela z dowolną komisją
+                            if qty > 0:
+                                quants = self.env['stock.quant'].search([
+                                    ('quantity', '>=', qty),
+                                    ('lot_id', 'in', lot_ids2),
+                                    ('reserved_quantity', '=', 0),
+                                    ('product_id', '=', move.product_id.id),
+                                    ('location_id', 'in', locs_ids),
+                                ], order='quantity desc')
+                                if quants:
+
+                                    if move.product_id.lot_reservation_type == '1':
+                                        qty_2 = quants[0].quantity
+                                    else:
+                                        qty_2 = qty
+                                    qty -= qty_2
+                                    vals = {'move_id': move.id,
+                                            'product_id': move.product_id.id,
+                                            'product_uom_id': move.product_uom.id,
+                                            'location_id': quants[0].location_id.id,
+                                            'location_dest_id': self.picking_type_id.default_location_dest_id.id,
+                                            'picking_id': self.id,
+                                            'product_uom_qty': qty_2,
+                                            'lot_id': quants[0].lot_id.id,
+                                            'owner_id': quants[0].lot_id.owner_id.id,
+                                            'lead_id': quants[0].lot_id.lead_id.id,
+                                            'state': 'assigned'
+
+                                            }
+                                    sm = sml_obj.create(vals)
+                                    owner_id_d = quants[0].lot_id.owner_id
+                                    self.env['stock.quant']._update_reserved_quantity(
+                                        move.product_id, quants[0].location_id, qty_2, lot_id=quants[0].lot_id,
+                                        package_id=False, owner_id=owner_id_d, strict=True
+                                    )
+                                    move.write({'state': 'assigned'})
+                                else:
+                                    quants = self.env['stock.quant'].search([
+                                        ('quantity', '>', 0),
+                                        ('lot_id', 'in', lot_ids2),
+                                        ('reserved_quantity', '=', 0),
+                                        ('product_id', '=', move.product_id.id),
+                                        ('location_id', 'in', locs_ids),
+                                    ], order='quantity desc')
+                                    for quant in quants:
+                                        if move.product_id.lot_reservation_type != '1' and qty < quant.quantity:
+                                            qty_1 = qty
+                                        else:
+                                            qty_1 = quant.quantity
+
+                                        qty -= qty_1
+                                        quants_ok.append((quant, qty_1))
                                         if qty <= 0:
                                             break
                         for quant in quants_ok:
