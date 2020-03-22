@@ -21,6 +21,8 @@ class MrpProduction(models.Model):
                     multiple_use_bom.append(line.bom_line_id.product_id.id)
 
             for move in production.move_raw_ids:
+                if move.state == 'done':
+                    break
                 if (move.bom_line_id.lot_id.owner_id != self.owner_id and self.state != 'done') or (move.product_id.id in multiple_use_bom and self.state != 'done'):
 
                     owner_id = move.bom_line_id.lot_id.owner_id
